@@ -8,9 +8,10 @@ using Newtonsoft.Json;
 using UnityEditor.PackageManager.Requests;
 using System.Linq;
 using UnityEngine.InputSystem;
+using System.ComponentModel;
 public class GameManager : MonoBehaviour
 {
-    private const string API_URL = "http://localhost:3000/Player/dc7f8a28";
+    private const string ANSWER_API_URL = "http://localhost:3000/Player/da8b19e2";
     private const string BASE_API_URL = "http://localhost:3000/";
     public TextMeshProUGUI playerInfoTextBox;
     public TextMeshProUGUI ClubInfoTextBox;
@@ -62,7 +63,7 @@ public class GameManager : MonoBehaviour
     }
     IEnumerator GetPlayer()
     {
-        UnityWebRequest request = UnityWebRequest.Get(API_URL); 
+        UnityWebRequest request = UnityWebRequest.Get(ANSWER_API_URL); 
         yield return request.SendWebRequest();
         if (request.result == UnityWebRequest.Result.Success)
         {
@@ -83,16 +84,21 @@ public class GameManager : MonoBehaviour
 
     string DisplayPlayerInfo(Player p)
     {
+        string foot = string.IsNullOrEmpty(p.foot) ? "Unknown" : p.foot;
+        string nationality = string.IsNullOrEmpty(p.nationality) ? "Unknown" : p.nationality;
+        string height = p.height.HasValue ? $"{p.height.Value} cm" : "Unknown";
+        string age = p.age.HasValue ? $"{p.age.Value}" : "Unknown";
+
         string answer =
             $"Player Info\n\n" +
             $"Name: {p.player_name}\n" +
-            $"Nationality: {p.nationality}\n" +
+            $"Nationality: {nationality}\n" +
             $"Position: {p.positions}\n" +
-            $"Foot: {p.foot}\n" +
-            $"Age: {p.age}\n" +
-            $"Height: {p.height} cm\n" +
+            $"Foot: {foot}\n" +
+            $"Age: {age}\n" +
+            $"Height: {height}\n" +
             $"Current Club ID: " + clubMap[p.current_club] + "\n" +
-            $"Clubs Played For: " + DeSerializeString(p.clubs_played_for) + "\n" +
+            $"Clubs Played For: " + SetToString( DeSerializeString(p.clubs_played_for)) + "\n" +
             $"Matches: {p.matches_played}\n" +
             $"Goals: {p.goals}\n" +
             $"Assists: {p.assists}";
@@ -109,9 +115,9 @@ public class GameManager : MonoBehaviour
         
     }
 
-    private string DeSerializeString(string str)
+    private HashSet<String> DeSerializeString(string str)
     {
-        List<String> container = new List<string>();
+        HashSet<String> container = new HashSet<String>();
         int start = 0;
         string word = "";
         foreach(char s in str)
@@ -126,11 +132,16 @@ public class GameManager : MonoBehaviour
         word = str.Substring(start, 8);
         container.Add(word);
 
-        string answer = "";
 
-        for(int i = 0; i < container.Count; i++)
+        return container;
+    }
+
+    private string SetToString(HashSet<String> container)
+    {
+        string answer = "";
+        foreach(string s in container)
         {
-            answer += (clubMap[container[i]] + ", ");
+            answer += (clubMap[s] + ", ");
         }
 
         answer = answer.Substring(0, answer.Length - 2);
@@ -175,14 +186,20 @@ public class GameManager : MonoBehaviour
         public string player_name;
         public string positions;
         public string foot;
-        public int height;
-        public int age;
+        public int? height;
+        public int? age;
         public string nationality;
         public string current_club;
         public int goals;
         public int assists;
         public int matches_played;
         public string clubs_played_for;
+
+
+        public void MakeSets()
+        {
+
+        }
     }
 
     [System.Serializable]
