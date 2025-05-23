@@ -5,20 +5,61 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
+using UnityEditor.PackageManager.Requests;
+using System.Linq;
+using UnityEngine.InputSystem;
 public class GameManager : MonoBehaviour
 {
     private const string API_URL = "http://localhost:3000/Player/dc7f8a28";
     private const string BASE_API_URL = "http://localhost:3000/";
     public TextMeshProUGUI playerInfoTextBox;
     public TextMeshProUGUI ClubInfoTextBox;
+    public USW player_input_actions;
+    private InputAction test;
+
+
+    private Dictionary<string, string> clubMap;
+    private bool initializing;
 
     // Start is called before the first frame update
     void Start()
     {
-        StartCoroutine(GetPlayer());
+        
+        clubMap = new Dictionary<string, string>();
+        StartCoroutine(InitializeDatabase());
         //StartCoroutine(GetClubFromID("a77c513e"));
     }
 
+    private void Awake()
+    {
+        player_input_actions = new USW();
+    }
+    IEnumerator InitializeDatabase()
+    {
+        initializing = true;
+        string new_url = BASE_API_URL + "clubs";
+        UnityWebRequest club_request = UnityWebRequest.Get(new_url);
+        yield return club_request.SendWebRequest();
+        Club[] clubs;
+        if (club_request.result == UnityWebRequest.Result.Success)
+        {
+            string club_json = club_request.downloadHandler.text;
+            clubs = Newtonsoft.Json.JsonConvert.DeserializeObject<Club[]>(club_json);
+            for (int i = 0; i < clubs.Length; i++)
+            {
+                clubMap.Add(clubs[i].club_id, clubs[i].club_name);
+            }
+        }
+        else
+        {
+            Debug.LogError("Failed to fetch player: " + club_request.error);
+        }
+
+        ClubInfoTextBox.text = "Finished Gathering CLub Data";
+        initializing = false;
+
+        
+    }
     IEnumerator GetPlayer()
     {
         UnityWebRequest request = UnityWebRequest.Get(API_URL); 
@@ -27,27 +68,12 @@ public class GameManager : MonoBehaviour
         {
             string json = request.downloadHandler.text; 
             Player[] players = Newtonsoft.Json.JsonConvert.DeserializeObject<Player[]>(json);
-            string currentClubName = "";
 
-            string new_url = BASE_API_URL + "clubs/" + players[0].current_club;
-            UnityWebRequest club_request = UnityWebRequest.Get(new_url);
-            yield return club_request.SendWebRequest();
-            if (club_request.result == UnityWebRequest.Result.Success)
-            {
-                string club_json = club_request.downloadHandler.text;
-                Club[] clubs = Newtonsoft.Json.JsonConvert.DeserializeObject<Club[]>(club_json);
-                currentClubName = clubs[0].club_name;
-            }
-            else
-            {
-                Debug.LogError("Failed to fetch player: " + request.error);
-                currentClubName = "";
-            }
-
-            Debug.Log(currentClubName);
+            
 
 
-            playerInfoTextBox.text = DisplayPlayerInfo(players[0], currentClubName);
+            playerInfoTextBox.text = DisplayPlayerInfo(players[0]);
+            
         }
         else
         {
@@ -55,7 +81,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    string DisplayPlayerInfo(Player p, string cn)
+    string DisplayPlayerInfo(Player p)
     {
         string answer =
             $"Player Info\n\n" +
@@ -65,34 +91,82 @@ public class GameManager : MonoBehaviour
             $"Foot: {p.foot}\n" +
             $"Age: {p.age}\n" +
             $"Height: {p.height} cm\n" +
-            $"Current Club ID: " + cn + "\n" +
-            $"Clubs Played For: {p.clubs_played_for}\n" +
+            $"Current Club ID: " + clubMap[p.current_club] + "\n" +
+            $"Clubs Played For: " + DeSerializeString(p.clubs_played_for) + "\n" +
             $"Matches: {p.matches_played}\n" +
             $"Goals: {p.goals}\n" +
             $"Assists: {p.assists}";
         return answer;
     }
 
-    IEnumerator GetClubFromID(string id)
+    private void Clicker(InputAction.CallbackContext context)
+    {
+        if (!initializing)
+        {
+            StartCoroutine(GetPlayer());
+        }
+
+        
+    }
+
+    private string DeSerializeString(string str)
+    {
+        List<String> container = new List<string>();
+        int start = 0;
+        string word = "";
+        foreach(char s in str)
+        {
+            if(s == ' ')
+            {
+                word = str.Substring(start, 8);
+                container.Add(word);
+                start = start + 9;
+            }
+        }
+        word = str.Substring(start, 8);
+        container.Add(word);
+
+        string answer = "";
+
+        for(int i = 0; i < container.Count; i++)
+        {
+            answer += (clubMap[container[i]] + ", ");
+        }
+
+        answer = answer.Substring(0, answer.Length - 2);
+        return answer;
+    }
+
+    /*IEnumerator GetClubFromID(string id, ref string cCN)
     {
         string new_url = BASE_API_URL + "clubs/" + id;
-        UnityWebRequest request = UnityWebRequest.Get(new_url);
-        yield return request.SendWebRequest();
-        if (request.result == UnityWebRequest.Result.Success)
+        UnityWebRequest club_request = UnityWebRequest.Get(new_url);
+        yield return club_request.SendWebRequest();
+        if (club_request.result == UnityWebRequest.Result.Success)
         {
-            string json = request.downloadHandler.text;
-            Club[] clubs = Newtonsoft.Json.JsonConvert.DeserializeObject<Club[]>(json);
-            ClubInfoTextBox.text =  clubs[0].club_name;
+            string club_json = club_request.downloadHandler.text;
+            Club[] clubs = Newtonsoft.Json.JsonConvert.DeserializeObject<Club[]>(club_json);
+            cCN = clubs[0].club_name;
         }
         else
         {
-            Debug.LogError("Failed to fetch player: " + request.error);
-            ClubInfoTextBox.text = "";
+            Debug.LogError("Failed to fetch player: " + club_request.error);
+            cCN = "";
         }
+    }*/
+
+
+    private void OnEnable()
+    {
+        test = player_input_actions.UI.Click;
+        test.Enable();
+        test.performed += Clicker;
     }
 
-
-
+    private void OnDisable()
+    {
+        test.Disable();
+    }
 
     [System.Serializable]
     public class Player
