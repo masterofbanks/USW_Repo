@@ -11,7 +11,7 @@ using UnityEngine.InputSystem;
 using System.ComponentModel;
 public class GameManager : MonoBehaviour
 {
-    private const string ANSWER_API_URL = "http://localhost:3000/Player/da8b19e2";
+    private const string ANSWER_API_URL = "http://localhost:3000/Player/dc7f8a28";
     private const string BASE_API_URL = "http://localhost:3000/";
     public TextMeshProUGUI playerInfoTextBox;
     public TextMeshProUGUI ClubInfoTextBox;
@@ -61,9 +61,10 @@ public class GameManager : MonoBehaviour
 
         
     }
-    IEnumerator GetPlayer()
+    public IEnumerator GetPlayer(string id)
     {
-        UnityWebRequest request = UnityWebRequest.Get(ANSWER_API_URL); 
+        string newUrl = BASE_API_URL + "Player/" + id;
+        UnityWebRequest request = UnityWebRequest.Get(newUrl); 
         yield return request.SendWebRequest();
         if (request.result == UnityWebRequest.Result.Success)
         {
@@ -109,7 +110,7 @@ public class GameManager : MonoBehaviour
     {
         if (!initializing)
         {
-            StartCoroutine(GetPlayer());
+            //StartCoroutine(GetPlayer());
         }
 
         
