@@ -13,6 +13,7 @@ public class GameManager : MonoBehaviour
 {
     private const string ANSWER_API_URL = "http://localhost:3000/Player/dc7f8a28";
     private const string BASE_API_URL = "http://localhost:3000/";
+    public  string answer_id;
     public TextMeshProUGUI playerInfoTextBox;
     public TextMeshProUGUI ClubInfoTextBox;
     public USW player_input_actions;
@@ -58,7 +59,6 @@ public class GameManager : MonoBehaviour
 
         ClubInfoTextBox.text = "Finished Gathering CLub Data";
         initializing = false;
-
         
     }
     public IEnumerator GetPlayer(string id)
