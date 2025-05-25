@@ -44,7 +44,7 @@ public class InputBehavior : MonoBehaviour
         {
             string json = request.downloadHandler.text;
             players = Newtonsoft.Json.JsonConvert.DeserializeObject<Player[]>(json);
-            playerNames.Add(" ");
+            playerNames.Add("Click Here to View Options");
 
             foreach (Player p in players)
             {
