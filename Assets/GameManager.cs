@@ -9,12 +9,15 @@ using UnityEditor.PackageManager.Requests;
 using System.Linq;
 using UnityEngine.InputSystem;
 using System.ComponentModel;
+using Newtonsoft.Json.Linq;
 public class GameManager : MonoBehaviour
 {
     private const string ANSWER_API_URL = "http://localhost:3000/Player/dc7f8a28";
+    private const string ANSWER = "dc7f8a28";
     private const string BASE_API_URL = "http://localhost:3000/";
     public  string answer_id;
-    public TextMeshProUGUI playerInfoTextBox;
+    public TextMeshProUGUI CMBox;
+    public TextMeshProUGUI PlayerBox;
     public TextMeshProUGUI ClubInfoTextBox;
     public USW player_input_actions;
     private InputAction test;
@@ -63,24 +66,54 @@ public class GameManager : MonoBehaviour
     }
     public IEnumerator GetPlayer(string id)
     {
-        string newUrl = BASE_API_URL + "Player/" + id;
-        UnityWebRequest request = UnityWebRequest.Get(newUrl); 
+        string newUrl = BASE_API_URL + "compare";
+        string submission = BuildJson(id, ANSWER);
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(submission);
+
+        UnityWebRequest request = new UnityWebRequest(newUrl, "POST");
+
+        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
+
         yield return request.SendWebRequest();
         if (request.result == UnityWebRequest.Result.Success)
         {
-            string json = request.downloadHandler.text; 
-            Player[] players = Newtonsoft.Json.JsonConvert.DeserializeObject<Player[]>(json);
-
-            
+            string json = request.downloadHandler.text;
+            PlayerComparison cmp = Newtonsoft.Json.JsonConvert.DeserializeObject<PlayerComparison>(json);
 
 
-            playerInfoTextBox.text = DisplayPlayerInfo(players[0]);
-            
+
+
+            CMBox.text = DisplayComparisonInfo(cmp);
+
         }
         else
         {
             Debug.LogError("Failed to fetch player: " + request.error);
         }
+
+        newUrl = BASE_API_URL + "Player/" + id;
+        request = UnityWebRequest.Get(newUrl);
+        yield return request.SendWebRequest();
+        if (request.result == UnityWebRequest.Result.Success)
+        {
+            string json = request.downloadHandler.text;
+            Player[] players = Newtonsoft.Json.JsonConvert.DeserializeObject<Player[]>(json);
+            PlayerBox.text = DisplayPlayerInfo(players[0]);
+        }
+
+        else
+        {
+            Debug.LogError("Failed to fetch player: " + request.error);
+        }
+    }
+
+    string BuildJson(string id1, string id2)
+    {
+        string answer = $"{{\"id1\":\"{id1}\",\"id2\":\"{id2}\"}}";
+        Debug.Log(answer);
+        return answer;
     }
 
     string DisplayPlayerInfo(Player p)
@@ -105,6 +138,35 @@ public class GameManager : MonoBehaviour
             $"Assists: {p.assists}";
         return answer;
     }
+
+    public static string DisplayComparisonInfo(PlayerComparison comp)
+    {
+        return
+            $"Nation: {Format(comp.nation_comparison)}\n" +
+            $"Position: {Format(comp.positions_comparison)}\n" +
+            $"Foot: {Format(comp.foot_comparison)}\n" +
+            $"Height: {Format(comp.height_comparison)}\n" +
+            $"Age: {Format(comp.age_comparison)}\n" +
+            $"Current Club: {Format(comp.cc_comparison)}\n" +
+            $"Clubs Played For: {Format(comp.cpf_comparison)}\n" +
+            $"Goals: {Format(comp.goals_comparison)}\n" +
+            $"Assists: {Format(comp.assists_comparison)}\n" +
+            $"Matches Played: {Format(comp.mp_comparison)}";
+    }
+
+    private static string Format(string comparison)
+    {
+        switch (comparison)
+        {
+            case "equal": return "Match";
+            case "partial": return "Partial Match";
+            case "greater": return "Higher";
+            case "less_than": return "Lower";
+            case "unknown": return "Unknown";
+            default: return comparison;
+        }
+    }
+
 
     private void Clicker(InputAction.CallbackContext context)
     {
@@ -149,23 +211,6 @@ public class GameManager : MonoBehaviour
         return answer;
     }
 
-    /*IEnumerator GetClubFromID(string id, ref string cCN)
-    {
-        string new_url = BASE_API_URL + "clubs/" + id;
-        UnityWebRequest club_request = UnityWebRequest.Get(new_url);
-        yield return club_request.SendWebRequest();
-        if (club_request.result == UnityWebRequest.Result.Success)
-        {
-            string club_json = club_request.downloadHandler.text;
-            Club[] clubs = Newtonsoft.Json.JsonConvert.DeserializeObject<Club[]>(club_json);
-            cCN = clubs[0].club_name;
-        }
-        else
-        {
-            Debug.LogError("Failed to fetch player: " + club_request.error);
-            cCN = "";
-        }
-    }*/
 
 
     private void OnEnable()
@@ -197,10 +242,24 @@ public class GameManager : MonoBehaviour
         public string clubs_played_for;
 
 
-        public void MakeSets()
-        {
+    }
 
-        }
+    [System.Serializable]
+    public class PlayerComparison
+    {
+        public string positions_comparison;
+        public string foot_comparison;
+        public string height_comparison;
+        public string age_comparison;
+        public string nation_comparison;
+        public string cc_comparison;
+        public string goals_comparison;
+        public string assists_comparison;
+        public string mp_comparison;
+        public string cpf_comparison;
+        
+
+
     }
 
     [System.Serializable]
