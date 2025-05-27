@@ -12,8 +12,8 @@ using System.ComponentModel;
 using Newtonsoft.Json.Linq;
 public class GameManager : MonoBehaviour
 {
-    private const string ANSWER_API_URL = "http://localhost:3000/Player/dc7f8a28";
-    private const string ANSWER = "dc7f8a28";
+    private const string ANSWER_API_URL = "http://localhost:3000/Player/4d77b365";
+    private const string ANSWER = "4d77b365";
     private const string BASE_API_URL = "http://localhost:3000/";
     public  string answer_id;
     public TextMeshProUGUI CMBox;
@@ -21,9 +21,17 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI ClubInfoTextBox;
     public USW player_input_actions;
     private InputAction test;
+    public GameObject TopGrid;
 
+    public Color correct_color;
+    public Color partial_correct_color;
+    public Color incorrect_color;
+    public Color unknown;
 
-    private Dictionary<string, string> clubMap;
+    public int num_attempts;
+    public TextMeshProUGUI attempt_box;
+
+    public Dictionary<string, string> clubMap;
     private bool initializing;
 
     // Start is called before the first frame update
@@ -33,6 +41,11 @@ public class GameManager : MonoBehaviour
         clubMap = new Dictionary<string, string>();
         StartCoroutine(InitializeDatabase());
         //StartCoroutine(GetClubFromID("a77c513e"));
+    }
+
+    private void Update()
+    {
+        attempt_box.text = "Attempts: " + num_attempts.ToString();
     }
 
     private void Awake()
@@ -67,7 +80,7 @@ public class GameManager : MonoBehaviour
     public IEnumerator GetPlayer(string id)
     {
         string newUrl = BASE_API_URL + "compare";
-        string submission = BuildJson(id, ANSWER);
+        string submission = BuildJson(ANSWER, id);
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(submission);
 
         UnityWebRequest request = new UnityWebRequest(newUrl, "POST");
@@ -75,17 +88,16 @@ public class GameManager : MonoBehaviour
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
-
+        PlayerComparison cmp = new PlayerComparison();
         yield return request.SendWebRequest();
         if (request.result == UnityWebRequest.Result.Success)
         {
             string json = request.downloadHandler.text;
-            PlayerComparison cmp = Newtonsoft.Json.JsonConvert.DeserializeObject<PlayerComparison>(json);
+            cmp = Newtonsoft.Json.JsonConvert.DeserializeObject<PlayerComparison>(json);
 
 
 
 
-            CMBox.text = DisplayComparisonInfo(cmp);
 
         }
         else
@@ -100,7 +112,10 @@ public class GameManager : MonoBehaviour
         {
             string json = request.downloadHandler.text;
             Player[] players = Newtonsoft.Json.JsonConvert.DeserializeObject<Player[]>(json);
-            PlayerBox.text = DisplayPlayerInfo(players[0]);
+            //PlayerBox.text = DisplayPlayerInfo(players[0]);
+            TopGrid.GetComponent<GuessBehavior>().ShowGuess(players[0], cmp);
+
+            num_attempts--;
         }
 
         else
@@ -109,10 +124,9 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    string BuildJson(string id1, string id2)
+    string BuildJson(string id1, string id2) 
     {
         string answer = $"{{\"id1\":\"{id1}\",\"id2\":\"{id2}\"}}";
-        Debug.Log(answer);
         return answer;
     }
 
@@ -139,34 +153,21 @@ public class GameManager : MonoBehaviour
         return answer;
     }
 
-    public static string DisplayComparisonInfo(PlayerComparison comp)
+   
+        
+    public Color getColor(string comparison)
     {
-        return
-            $"Nation: {Format(comp.nation_comparison)}\n" +
-            $"Position: {Format(comp.positions_comparison)}\n" +
-            $"Foot: {Format(comp.foot_comparison)}\n" +
-            $"Height: {Format(comp.height_comparison)}\n" +
-            $"Age: {Format(comp.age_comparison)}\n" +
-            $"Current Club: {Format(comp.cc_comparison)}\n" +
-            $"Clubs Played For: {Format(comp.cpf_comparison)}\n" +
-            $"Goals: {Format(comp.goals_comparison)}\n" +
-            $"Assists: {Format(comp.assists_comparison)}\n" +
-            $"Matches Played: {Format(comp.mp_comparison)}";
+            switch (comparison)
+            {
+                case "equal": return correct_color;
+                case "partial": return partial_correct_color;
+                case "greater": return incorrect_color;
+                case "less_than": return incorrect_color;
+                case "unknown": return unknown;
+                default: return incorrect_color;
+            }
+        
     }
-
-    private static string Format(string comparison)
-    {
-        switch (comparison)
-        {
-            case "equal": return "Match";
-            case "partial": return "Partial Match";
-            case "greater": return "Higher";
-            case "less_than": return "Lower";
-            case "unknown": return "Unknown";
-            default: return comparison;
-        }
-    }
-
 
     private void Clicker(InputAction.CallbackContext context)
     {
@@ -178,7 +179,7 @@ public class GameManager : MonoBehaviour
         
     }
 
-    private HashSet<String> DeSerializeString(string str)
+    public HashSet<String> DeSerializeString(string str)
     {
         HashSet<String> container = new HashSet<String>();
         int start = 0;
@@ -199,7 +200,7 @@ public class GameManager : MonoBehaviour
         return container;
     }
 
-    private string SetToString(HashSet<String> container)
+    public string SetToString(HashSet<String> container)
     {
         string answer = "";
         foreach(string s in container)
@@ -247,6 +248,7 @@ public class GameManager : MonoBehaviour
     [System.Serializable]
     public class PlayerComparison
     {
+        public string name_comparison;
         public string positions_comparison;
         public string foot_comparison;
         public string height_comparison;

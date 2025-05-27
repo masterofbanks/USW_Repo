@@ -66,7 +66,7 @@ public class InputBehavior : MonoBehaviour
     {
         
         int pickedEntryIndex = dropdown.value - 1;
-        if(pickedEntryIndex >= 0)
+        if(pickedEntryIndex >= 0 && gameManager.num_attempts > 0)
             StartCoroutine(gameManager.GetPlayer(players[pickedEntryIndex].player_id));
     }
 }
