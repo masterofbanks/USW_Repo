@@ -12,10 +12,8 @@ using System.ComponentModel;
 using Newtonsoft.Json.Linq;
 public class GameManager : MonoBehaviour
 {
-    private const string ANSWER_API_URL = "http://localhost:3000/Player/4d77b365";
-    private const string ANSWER = "4d77b365";
+    private string ANSWER;
     private const string BASE_API_URL = "http://localhost:3000/";
-    public  string answer_id;
     public TextMeshProUGUI CMBox;
     public TextMeshProUGUI PlayerBox;
     public TextMeshProUGUI ClubInfoTextBox;
@@ -75,6 +73,21 @@ public class GameManager : MonoBehaviour
 
         ClubInfoTextBox.text = "Finished Gathering CLub Data";
         initializing = false;
+
+        string random_url = BASE_API_URL + "random";
+        UnityWebRequest random_request = UnityWebRequest.Get(random_url);
+        yield return random_request.SendWebRequest();
+        if (random_request.result == UnityWebRequest.Result.Success)
+        {
+            string id_json = random_request.downloadHandler.text;
+            ID answer_id = Newtonsoft.Json.JsonConvert.DeserializeObject<ID>(id_json);
+            ANSWER = answer_id.player_id;
+            Debug.Log(id_json);
+        }
+        else
+        {
+            Debug.LogError("Failed to fetch random: " + club_request.error);
+        }
         
     }
     public IEnumerator GetPlayer(string id)
@@ -270,6 +283,13 @@ public class GameManager : MonoBehaviour
         public string club_id;
         public string club_name;
         
+    }
+
+    [System.Serializable]
+    public class ID
+    {
+        public string player_id;
+
     }
 
 

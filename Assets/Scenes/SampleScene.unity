@@ -11254,7 +11254,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 69d0c85d77fd5d744b90100f0a3da394, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  answer_id: dc7f8a28
   CMBox: {fileID: 972785736}
   PlayerBox: {fileID: 302396268}
   ClubInfoTextBox: {fileID: 873373304}
