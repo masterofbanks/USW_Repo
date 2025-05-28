@@ -22,7 +22,7 @@ public class GuessBehavior : MonoBehaviour
     public void ShowGuess(GameManager.Player inputPlayer, GameManager.PlayerComparison cmp)
     {
         
-
+        
         TextMeshProUGUI[] textboxes = GuessContainers[currentIndex].GetComponentsInChildren<TextMeshProUGUI>();
         UnityEngine.UI.Image[] panels = GuessContainers[currentIndex].GetComponentsInChildren<UnityEngine.UI.Image>();
         textboxes[0].text = inputPlayer.player_name;
@@ -58,14 +58,38 @@ public class GuessBehavior : MonoBehaviour
         panels[9].color = gameManager.getColor(cmp.mp_comparison);
         textboxes[9].text = compareInts(cmp.mp_comparison) + inputPlayer.matches_played.ToString();
 
-        
+        panels[10].color = gameManager.getColor(cmp.league_comparison);
+        textboxes[10].text = inputPlayer.league;
 
 
         GuessContainers[currentIndex].SetActive(true);
         currentIndex++;
 
-    }
+        if (gameManager.getAnswer() == inputPlayer.player_id)
+        {
+            gameManager.Endgame("Congrats! You got the answer in " + numGuesses() + " attempts!");
+        }
 
+        else if (gameManager.num_attempts == 0)
+        {
+            Debug.Log("No attempts left");
+            gameManager.Endgame("The Correct Answer was " + gameManager.ANSWER_NAME);
+        }
+
+    }
+    public int numGuesses()
+    {
+        int answer = 0;
+        for(int i = 0; i < GuessContainers.Length; i++)
+        {
+            if (GuessContainers[i].activeSelf)
+            {
+                answer++;
+            }
+        }
+
+        return answer;
+    }
     public string compareInts(string comparison)
     {
         switch (comparison)

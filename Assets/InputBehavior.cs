@@ -48,7 +48,8 @@ public class InputBehavior : MonoBehaviour
 
             foreach (Player p in players)
             {
-                playerNames.Add(p.player_name);
+                string entry = p.player_name + " | Age: " + p.age.ToString();
+                playerNames.Add(entry);
             }
 
 
@@ -68,5 +69,7 @@ public class InputBehavior : MonoBehaviour
         int pickedEntryIndex = dropdown.value - 1;
         if(pickedEntryIndex >= 0 && gameManager.num_attempts > 0)
             StartCoroutine(gameManager.GetPlayer(players[pickedEntryIndex].player_id));
+            gameManager.num_attempts--;
+
     }
 }

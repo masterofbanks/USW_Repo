@@ -10,9 +10,13 @@ using System.Linq;
 using UnityEngine.InputSystem;
 using System.ComponentModel;
 using Newtonsoft.Json.Linq;
+using static GameManager;
+using static Unity.Burst.Intrinsics.X86.Avx;
+using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
     private string ANSWER;
+    public string ANSWER_NAME;
     private const string BASE_API_URL = "http://localhost:3000/";
     public TextMeshProUGUI CMBox;
     public TextMeshProUGUI PlayerBox;
@@ -30,6 +34,10 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI attempt_box;
 
     public Dictionary<string, string> clubMap;
+
+    public TextMeshProUGUI congrats;
+    public GameObject button;
+    public GameObject searching;
     private bool initializing;
 
     // Start is called before the first frame update
@@ -38,6 +46,9 @@ public class GameManager : MonoBehaviour
         
         clubMap = new Dictionary<string, string>();
         StartCoroutine(InitializeDatabase());
+        button.SetActive(false);
+        searching.SetActive(true);
+        congrats.enabled = false;
         //StartCoroutine(GetClubFromID("a77c513e"));
     }
 
@@ -88,7 +99,24 @@ public class GameManager : MonoBehaviour
         {
             Debug.LogError("Failed to fetch random: " + club_request.error);
         }
-        
+
+        string newUrl = BASE_API_URL + "Player/" + ANSWER;
+        UnityWebRequest request = UnityWebRequest.Get(newUrl);
+        yield return request.SendWebRequest();
+        if (request.result == UnityWebRequest.Result.Success)
+        {
+            string json = request.downloadHandler.text;
+            Player[] players = Newtonsoft.Json.JsonConvert.DeserializeObject<Player[]>(json);
+            //PlayerBox.text = DisplayPlayerInfo(players[0]);
+            ANSWER_NAME = players[0].player_name;
+
+        }
+
+        else
+        {
+            Debug.LogError("Failed to fetch player: " + request.error);
+        }
+
     }
     public IEnumerator GetPlayer(string id)
     {
@@ -128,7 +156,6 @@ public class GameManager : MonoBehaviour
             //PlayerBox.text = DisplayPlayerInfo(players[0]);
             TopGrid.GetComponent<GuessBehavior>().ShowGuess(players[0], cmp);
 
-            num_attempts--;
         }
 
         else
@@ -143,28 +170,7 @@ public class GameManager : MonoBehaviour
         return answer;
     }
 
-    string DisplayPlayerInfo(Player p)
-    {
-        string foot = string.IsNullOrEmpty(p.foot) ? "Unknown" : p.foot;
-        string nationality = string.IsNullOrEmpty(p.nationality) ? "Unknown" : p.nationality;
-        string height = p.height.HasValue ? $"{p.height.Value} cm" : "Unknown";
-        string age = p.age.HasValue ? $"{p.age.Value}" : "Unknown";
-
-        string answer =
-            $"Player Info\n\n" +
-            $"Name: {p.player_name}\n" +
-            $"Nationality: {nationality}\n" +
-            $"Position: {p.positions}\n" +
-            $"Foot: {foot}\n" +
-            $"Age: {age}\n" +
-            $"Height: {height}\n" +
-            $"Current Club ID: " + clubMap[p.current_club] + "\n" +
-            $"Clubs Played For: " + SetToString( DeSerializeString(p.clubs_played_for)) + "\n" +
-            $"Matches: {p.matches_played}\n" +
-            $"Goals: {p.goals}\n" +
-            $"Assists: {p.assists}";
-        return answer;
-    }
+    
 
    
         
@@ -225,7 +231,14 @@ public class GameManager : MonoBehaviour
         return answer;
     }
 
-
+    public void Endgame(string release_text)
+    {
+        button.SetActive(true);
+        searching.SetActive(false);
+        congrats.text = release_text;
+        congrats.enabled = true;
+        
+    }
 
     private void OnEnable()
     {
@@ -254,6 +267,7 @@ public class GameManager : MonoBehaviour
         public int assists;
         public int matches_played;
         public string clubs_played_for;
+        public string league;
 
 
     }
@@ -272,6 +286,7 @@ public class GameManager : MonoBehaviour
         public string assists_comparison;
         public string mp_comparison;
         public string cpf_comparison;
+        public string league_comparison;
         
 
 
@@ -290,6 +305,16 @@ public class GameManager : MonoBehaviour
     {
         public string player_id;
 
+    }
+
+    public string getAnswer()
+    {
+        return ANSWER;
+    }
+
+    public void Replay()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
 
