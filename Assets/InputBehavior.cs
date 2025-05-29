@@ -11,11 +11,12 @@ public class InputBehavior : MonoBehaviour
 {
     private TMP_InputField inputField;
     public TMP_Dropdown dropdown;
-    private const string BASE_API_URL = "http://localhost:3000/";
+    private const string BASE_API_URL = "https://soccer-api-1tkh.onrender.com/";
 
     public List<string> playerNames;
     public Player[] players;
     public GameManager gameManager;
+    public bool searching;
     // Start is called before the first frame update
     void Start()
     {
@@ -31,11 +32,13 @@ public class InputBehavior : MonoBehaviour
 
     public void UpdateSearch()
     {
-        StartCoroutine(SearchPlayers(inputField.text));
+        if(!searching)
+            StartCoroutine(SearchPlayers(inputField.text));
     }
 
     IEnumerator SearchPlayers(string searchTerm)
     {
+        searching = true;
         playerNames.Clear();
         string newRequest = BASE_API_URL + "Player/name/" + searchTerm;
         UnityWebRequest request = UnityWebRequest.Get(newRequest);
@@ -61,6 +64,8 @@ public class InputBehavior : MonoBehaviour
         {
             Debug.LogError("Failed to fetch player: " + request.error);
         }
+
+        searching = false;
     }
 
     public void AcceptPlayerInput()

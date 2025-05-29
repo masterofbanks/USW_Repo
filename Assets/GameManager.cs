@@ -5,7 +5,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
-using UnityEditor.PackageManager.Requests;
 using System.Linq;
 using UnityEngine.InputSystem;
 using System.ComponentModel;
@@ -17,7 +16,7 @@ public class GameManager : MonoBehaviour
 {
     private string ANSWER;
     public string ANSWER_NAME;
-    private const string BASE_API_URL = "http://localhost:3000/";
+    private const string BASE_API_URL = "https://soccer-api-1tkh.onrender.com/";
     public TextMeshProUGUI CMBox;
     public TextMeshProUGUI PlayerBox;
     public TextMeshProUGUI ClubInfoTextBox;
