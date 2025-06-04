@@ -9,25 +9,40 @@ using UnityEngine.UIElements;
 
 public class GuessBehavior : BaseGuessBehavior
 {
-
+    public GameObject CorrectGuessAttributes;
     public override void ShowGuess(GameManager.Player inputPlayer, GameManager.PlayerComparison cmp)
     {
         
         
         ShowGuessHelper(inputPlayer, cmp);
+        GuessContainers[currentIndex].SetActive(true);
+        currentIndex++;
+        StartCoroutine(ScrollToBottom());
 
         if (gameManager.getAnswer() == inputPlayer.player_id)
         {
-            gameManager.Endgame("Congrats! You got the answer in " + numGuesses() + " attempts!");
+            if(numGuesses() == 1)
+                gameManager.Endgame($"Congrats! You got the answer in " + numGuesses() + " attempt!");
+            else
+                gameManager.Endgame($"Congrats! You got the answer in " + numGuesses() + " attempts!");
         }
 
         else if (gameManager.num_attempts == 0)
         {
             Debug.Log("No attempts left");
-            gameManager.Endgame("The Correct Answer was " + gameManager.ANSWER_NAME);
+            gameManager.Endgame("Correct Answer");
+            gameManager.CorrectAnswerGrid.SetActive(true); CorrectGuessAttributes.SetActive(true);
         }
 
     }
-    
+
+    IEnumerator ScrollToBottom()
+    {
+        yield return new WaitForEndOfFrame();
+        Canvas.ForceUpdateCanvases();
+        scrollRect.verticalNormalizedPosition = 0f;
+        Canvas.ForceUpdateCanvases();
+    }
+
 
 }

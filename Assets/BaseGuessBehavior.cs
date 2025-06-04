@@ -55,11 +55,15 @@ public class BaseGuessBehavior : MonoBehaviour
         textboxes[5].text = inputPlayer.nationality;
         panels[5].color = gameManager.getColor(cmp.nation_comparison);
 
-        if(inputPlayer.current_club == "Internazionale")
+        if(gameManager.clubMap[inputPlayer.current_club] == "Internazionale")
         {
-            inputPlayer.current_club = "Inter";
+            textboxes[6].text = "Inter";
         }
-        textboxes[6].text = gameManager.clubMap[inputPlayer.current_club];
+
+        else
+        {
+            textboxes[6].text = gameManager.clubMap[inputPlayer.current_club];
+        }
         panels[6].color = gameManager.getColor(cmp.cc_comparison);
 
         panels[7].color = gameManager.getColor(cmp.goals_comparison);
@@ -76,9 +80,7 @@ public class BaseGuessBehavior : MonoBehaviour
         textboxes[10].text = inputPlayer.league;
 
 
-        GuessContainers[currentIndex].SetActive(true);
-        currentIndex++;
-        StartCoroutine(ScrollToBottom());
+        
     }
     public int numGuesses()
     {
@@ -104,12 +106,6 @@ public class BaseGuessBehavior : MonoBehaviour
         }
     }
 
-    IEnumerator ScrollToBottom()
-    {
-        yield return new WaitForEndOfFrame();
-        Canvas.ForceUpdateCanvases();
-        scrollRect.verticalNormalizedPosition = 0f;
-        Canvas.ForceUpdateCanvases();
-    }
+    
 
 }

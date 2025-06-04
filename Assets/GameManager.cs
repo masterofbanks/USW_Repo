@@ -92,6 +92,7 @@ public class GameManager : MonoBehaviour
             ID answer_id = Newtonsoft.Json.JsonConvert.DeserializeObject<ID>(id_json);
             ANSWER = answer_id.player_id;
             StartCoroutine(GetPlayer(ANSWER, CorrectAnswerGrid.GetComponent<BaseGuessBehavior>()));
+            
             Debug.Log(id_json);
         }
         else
@@ -236,6 +237,7 @@ public class GameManager : MonoBehaviour
         searching.SetActive(false);
         congrats.text = release_text;
         congrats.enabled = true;
+        
         
     }
 
