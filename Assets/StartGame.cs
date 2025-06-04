@@ -10,7 +10,7 @@ using TMPro;
 public class StartGame : MonoBehaviour
 {
     private const string BASE_API_URL = "https://soccer-api-1tkh.onrender.com/";
-    public TextMeshProUGUI Loading;
+    public GameObject Loading;
     // Start is called before the first frame update
     void Start()
     {
@@ -30,7 +30,7 @@ public class StartGame : MonoBehaviour
 
     public IEnumerator GetPlayer(string id)
     {
-        Loading.text = "Loading...";
+        Loading.SetActive(true);
         string newUrl = BASE_API_URL + "Player/" + id;
         UnityWebRequest request = UnityWebRequest.Get(newUrl);
         yield return request.SendWebRequest();
@@ -39,7 +39,6 @@ public class StartGame : MonoBehaviour
             string json = request.downloadHandler.text;
             Player[] players = Newtonsoft.Json.JsonConvert.DeserializeObject<Player[]>(json);
             //PlayerBox.text = DisplayPlayerInfo(players[0]);
-            Loading.text = "Finished Loading";
             SceneManager.LoadScene(1);
 
 

@@ -21,8 +21,8 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI PlayerBox;
     public TextMeshProUGUI ClubInfoTextBox;
     public USW player_input_actions;
+    public GameObject CorrectAnswerGrid;
     private InputAction test;
-    public GameObject TopGrid;
 
     public Color correct_color;
     public Color partial_correct_color;
@@ -48,12 +48,11 @@ public class GameManager : MonoBehaviour
         button.SetActive(false);
         searching.SetActive(true);
         congrats.enabled = false;
-        //StartCoroutine(GetClubFromID("a77c513e"));
     }
 
     private void Update()
     {
-        attempt_box.text = "Attempts: " + num_attempts.ToString();
+        attempt_box.text = "Attempts Left: " + num_attempts.ToString();
     }
 
     private void Awake()
@@ -92,6 +91,7 @@ public class GameManager : MonoBehaviour
             string id_json = random_request.downloadHandler.text;
             ID answer_id = Newtonsoft.Json.JsonConvert.DeserializeObject<ID>(id_json);
             ANSWER = answer_id.player_id;
+            StartCoroutine(GetPlayer(ANSWER, CorrectAnswerGrid.GetComponent<BaseGuessBehavior>()));
             Debug.Log(id_json);
         }
         else
@@ -117,7 +117,7 @@ public class GameManager : MonoBehaviour
         }
 
     }
-    public IEnumerator GetPlayer(string id)
+    public IEnumerator GetPlayer(string id, BaseGuessBehavior gb)
     {
         string newUrl = BASE_API_URL + "compare";
         string submission = BuildJson(ANSWER, id);
@@ -153,7 +153,7 @@ public class GameManager : MonoBehaviour
             string json = request.downloadHandler.text;
             Player[] players = Newtonsoft.Json.JsonConvert.DeserializeObject<Player[]>(json);
             //PlayerBox.text = DisplayPlayerInfo(players[0]);
-            TopGrid.GetComponent<GuessBehavior>().ShowGuess(players[0], cmp);
+            gb.ShowGuess(players[0], cmp);
 
         }
 

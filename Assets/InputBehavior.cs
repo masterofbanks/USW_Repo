@@ -17,6 +17,8 @@ public class InputBehavior : MonoBehaviour
     public Player[] players;
     public GameManager gameManager;
     public bool searching;
+    public GameObject TopGrid;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -73,8 +75,10 @@ public class InputBehavior : MonoBehaviour
         
         int pickedEntryIndex = dropdown.value - 1;
         if(pickedEntryIndex >= 0 && gameManager.num_attempts > 0)
-            StartCoroutine(gameManager.GetPlayer(players[pickedEntryIndex].player_id));
+            StartCoroutine(gameManager.GetPlayer(players[pickedEntryIndex].player_id, TopGrid.GetComponent<GuessBehavior>()));
             gameManager.num_attempts--;
 
     }
+
+    
 }
