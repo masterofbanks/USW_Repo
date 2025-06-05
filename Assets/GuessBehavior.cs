@@ -30,7 +30,7 @@ public class GuessBehavior : BaseGuessBehavior
         else if (gameManager.num_attempts == 0)
         {
             Debug.Log("No attempts left");
-            gameManager.Endgame("Correct Answer");
+            gameManager.Endgame("Unfortunate! Here is the Correct Answer:");
             gameManager.CorrectAnswerGrid.SetActive(true); CorrectGuessAttributes.SetActive(true);
         }
 
